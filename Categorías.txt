@@ -1,0 +1,145 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<html>
+<head>
+    <title>Categorias</title>
+    <jsp:include page="../layouts/head.jsp"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function mostrarAlerta() {
+            alert("El usuario ya está registrado.");
+        }
+    </script>
+</head>
+<body style="background-color: #E5E5E5;">
+<!--barra Superior-->
+<div class=" text-center row navbar" style="background-color: #ffffff" >
+    <h3>Sistema Personal Contable</h3>
+</div>
+
+<!--Barra de navegacion-->
+<div class="row" style="position: fixed; width: 100%; height: 100%">
+    <div class="col-2 mr-3" style="background-color: #ffffff">
+        <ul class="nav flex-column nav nav-pills">
+            <li class="nav-item p-md-3">
+                <a class="nav-link" aria-current="page" href="Dashboard.jsp">Dashboard</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="Graficos.jsp">Graficos</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link active" href="Categorias.jsp">Categorias</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="Movimientos.jsp">Movimientos</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="../index.jsp">Cerrar Sesion</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="col-10">
+
+        <table class="table table-hover mt-3" style="width: 1090px; background-color: #ffffff;">
+            <thead style="color: #00C89F; font-size: large;">
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Estado</th>
+            </thead>
+
+            <tbody>
+            <c:forEach var="categoria" items="${categorias}" varStatus="s">
+                <tr>
+                    <td><c:out value="${s.count}"/></td>
+                    <td><c:out value="${categoria.nombre}"/></td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
+                            <label class="form-check-label" for="flexSwitchCheckChecked"></label>
+                        </div>
+                    </td>
+                </tr>
+            </c:forEach>
+
+                <td colspan="6">
+                    Sin registros...
+                </td>
+            </tbody>
+        </table>
+        <!-- boton del modal  -->
+        <button  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#Modal">
+            Añadir
+        </button>
+        <form class="" action="/Categorias" method="get">
+            <button type="submit" class="btn btn-secondary">Actualizar Registros</button>
+        </form>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalLabel">Añadir Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="FormC">
+                    <div class="mb-2">
+                        <label for="nombre" class="form-label">Nombre Categoria:</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success" id="btnGuardarModal">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $("#btnGuardarModal").click(function() {
+            var nombreCategoria = $("#nombre").val();
+
+            if (nombreCategoria.trim() !== "") {
+                agregarCategoriaTabla(nombreCategoria);
+                $("#Modal").modal("hide");
+            }
+        });
+    });
+
+    function agregarCategoriaTabla(nombreCategoria) {
+        var tabla = $("table tbody");
+
+        var fila = "<tr>" +
+            "<td>" + (tabla.children("tr").length + 1) + "</td>" +
+            "<td>" + nombreCategoria + "</td>" +
+            "<td>" +
+            "<div class='form-check form-switch'>" +
+            "<input class='form-check-input' type='checkbox' role='switch' id='flexSwitchCheckChecked' checked>" +
+            "<label class='form-check-label' for='flexSwitchCheckChecked'></label>" +
+            "</div>" +
+            "</td>" +
+            "</tr>";
+
+        tabla.append(fila);
+
+        if (tabla.children("tr").length === 1) {
+            tabla.empty();
+        }
+    }
+</script>
+
+
+
+<jsp:include page="../layouts/footer.jsp"/>
+</body>
+</html>
