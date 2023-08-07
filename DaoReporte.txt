@@ -1,0 +1,197 @@
+package com.example.proyecto_spc.models.reporte;
+import com.example.proyecto_spc.models.categoria.Categoria;
+import com.example.proyecto_spc.models.categoria.DaoCategoria;
+import com.example.proyecto_spc.models.crud.DaoRepository;
+import com.example.proyecto_spc.models.cuenta_usuario.cuenta_usuario;
+import com.example.proyecto_spc.models.usuario.Usuario;
+import com.example.proyecto_spc.utils.MySQLConnection;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class DaoReporte implements DaoRepository<reporte> {
+
+    private Connection conn;
+    private PreparedStatement pstm;
+    private ResultSet rs;
+
+    private cuenta_usuario obtenerCuentaUsuarioPorId(long id) {
+        String query = "SELECT * FROM cuenta_usuario WHERE id_cuenta_usuario = ?;";
+        try {
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, id);
+            rs = pstm.executeQuery();
+            if (rs.next()) {
+                cuenta_usuario cuentaUsuario = new cuenta_usuario();
+                cuentaUsuario.setId_cuenta_usuario(rs.getLong("id_cuenta_usuario"));
+                cuentaUsuario.setNombre_banco(rs.getString("nombre_banco"));
+                cuentaUsuario.setNum_cuenta(rs.getString("num_cuenta"));
+                // Cargar Usuario
+                return cuentaUsuario;
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error obtenerCuentaUsuarioPorId: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private Categoria obtenerCategoriaPorId(long id) {
+        String query = "SELECT * FROM categoria WHERE id_categoria = ?;";
+        try {
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, id);
+            rs = pstm.executeQuery();
+            if (rs.next()) {
+                Categoria categoria = new Categoria();
+                categoria.setId_categoria(rs.getLong("id_categoria"));
+                categoria.setNombre(rs.getString("nombre"));
+                return categoria;
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error obtenerCategoriaPorId: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public List<reporte> findAll() {
+        List<reporte> reportes = new ArrayList<>();
+        try {
+            conn = new MySQLConnection().connect();
+            String query = "SELECT * FROM reporte;";
+            pstm = conn.prepareStatement(query);
+            rs = pstm.executeQuery();
+            while (rs.next()) {
+                reporte r = new reporte();
+                r.setId_reporte(rs.getLong("id_reporte"));
+                r.setMonto(rs.getLong("monto"));
+                r.setFecha(rs.getString("fecha"));
+                r.setConcepto(rs.getString("concepto"));
+                r.setTipo_movimiento(rs.getString("tipo_movimiento"));
+
+                // Cargar cuenta_usuario y Categoria
+                long cuentaUsuarioId = rs.getLong("fk_cuenta_usuario");
+                long categoriaId = rs.getLong("fk_categoria");
+
+                cuenta_usuario cuentaUsuario = this.obtenerCuentaUsuarioPorId(cuentaUsuarioId);
+                Categoria categoria = this.obtenerCategoriaPorId(categoriaId);
+
+                r.setFk_cuenta_usuario(cuentaUsuario);
+                r.setFk_categoria(categoria);
+
+                reportes.add(r);
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error: " + e.getMessage());
+        } finally {
+            close();
+        }
+        return reportes;
+    }
+    @Override
+    public reporte findOne(Long id) {
+        reporte r = null;
+        try {
+            conn = new MySQLConnection().connect();
+            String query = "SELECT * FROM reporte WHERE id_reporte = ?;";
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, id);
+            rs = pstm.executeQuery();
+            if (rs.next()) {
+                r = new reporte();
+                r.setId_reporte(rs.getLong("id_reporte"));
+                r.setMonto(rs.getLong("monto"));
+                r.setFecha(rs.getString("fecha"));
+                r.setConcepto(rs.getString("concepto"));
+                r.setTipo_movimiento(rs.getString("tipo_movimiento"));
+
+
+            }
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error: " + e.getMessage());
+        } finally {
+            close();
+        }
+        return r;
+    }
+
+    @Override
+    public boolean save(reporte object) {
+        try {
+            conn = new MySQLConnection().connect();
+            String query = "INSERT INTO reporte (monto, fecha, concepto, tipo_movimiento) VALUES (?, ?, ?, ?);";
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, object.getMonto());
+            pstm.setString(2, object.getFecha());
+            pstm.setString(3, object.getConcepto());
+            pstm.setString(4, object.getTipo_movimiento());
+            return pstm.executeUpdate() > 0;
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error save: " + e.getMessage());
+        } finally {
+            close();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean update(reporte object) {
+        try {
+            conn = new MySQLConnection().connect();
+            String query = "UPDATE reporte SET monto=?, fecha=?, concepto=?, tipo_movimiento=? WHERE id_reporte=?;";
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, object.getMonto());
+            pstm.setString(2, object.getFecha());
+            pstm.setString(3, object.getConcepto());
+            pstm.setString(4, object.getTipo_movimiento());
+            pstm.setLong(5, object.getId_reporte());
+            return pstm.executeUpdate() > 0;
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error update: " + e.getMessage());
+        } finally {
+            close();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean delete(Long id) {
+        try {
+            conn = new MySQLConnection().connect();
+            String query = "DELETE FROM reporte WHERE id_reporte=?;";
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, id);
+            return pstm.executeUpdate() > 0;
+        } catch (SQLException e) {
+            Logger.getLogger(DaoReporte.class.getName())
+                    .log(Level.SEVERE, "Error delete: " + e.getMessage());
+        } finally {
+            close();
+        }
+        return false;
+    }
+
+    private void close() {
+        try {
+            if (conn != null) conn.close();
+            if (pstm != null) pstm.close();
+            if (rs != null) rs.close();
+        }catch (SQLException e){
+            Logger.getLogger(DaoCategoria.class.getName())
+                    .log(Level.SEVERE, "Error closeConnection" + e.getMessage());
+        }
+    }
+
+}
