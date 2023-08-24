@@ -1,0 +1,221 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<html>
+<head>
+    <title>Movimientos</title>
+    <jsp:include page="../layouts/head.jsp"/>
+</head>
+<body style="background-color: #E5E5E5;">
+<!--barra Superior-->
+<div class=" text-center row navbar" style="background-color: #ffffff" >
+    <h3>Sistema Personal Contable</h3>
+</div>
+
+<!--Barra de navegacion-->
+<div class="row" style="position: fixed; width: 100%; height: 100%">
+    <div class="col-2 mr-3" style="background-color: #ffffff">
+        <ul class="nav flex-column nav nav-pills">
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="/SPC/Dashboard">Dashboard</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="/SPC/Graficos">Graficos</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="/SPC/Categorias">Categorias</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link active" href="/SPC/Movimientos">Movimientos</a>
+            </li>
+            <li class="nav-item p-md-3">
+                <a class="nav-link" href="/Inicio">Cerrar Sesion</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="col-10">
+        <!--Tabla-->
+        <table class="table table-hover mt-3" style="width: 1090px; background-color: #ffffff;">
+            <thead style="color: #191970; font-size: large;">
+            <th>#</th>
+            <th>Monto</th>
+            <th>Concepto</th>
+            <th>Categoria</th>
+            <th>Fecha</th>
+            </thead>
+
+            <c:forEach var="movimiento" items="${movimientos}" varStatus="s">
+                <tr>
+                    <td><c:out value="${s.count}"/></td>
+                    <td><c:out value="${movimiento.monto}"/></td>
+                    <td><c:out value="${movimiento.concepto}"/></td>
+                    <td><c:out value="${movimiento.fk_categoria.nombre}"/></td>
+                    <td><c:out value="${movimiento.fecha}"/></td>
+                    <td>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ModalEditar-${movimiento.id_reporte}">
+                            Editar
+                        </button>
+                    </td>
+
+
+                    <td>
+                        <form action="/SPC/EliminarMovimiento" method="post">
+                            <input type="hidden" name="id" value="${movimiento.id_reporte}" />
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            </c:forEach>
+
+            <tr>
+                <td colspan="6">
+                    Sin registros...
+                </td>
+            </tr>
+        </table>
+
+        <!-- Boton Modal -->
+        <button  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#Modal">
+            Registrar
+        </button>
+
+        <!-- Boton Modal -->
+        <button  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#Modal">
+            Añadir Banco
+        </button>
+
+    </div>
+</div>
+
+<!-- Modal de Edición -->
+<div class="modal fade" id="ModalEditar-${movimiento.id_reporte}" tabindex="-1" aria-labelledby="ModalLabelEditar-${movimiento.id_reporte}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formularioEditar-${movimiento.id_reporte}" action="/SPC/ActualizarMovimiento" method="post">
+                <input type="hidden" name="id_reporte" value="${movimiento.id_reporte}" />
+
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label for="montoEditar-${movimiento.id_reporte}" class="form-label">Monto</label>
+                        <input type="number" class="form-control" id="montoEditar-${movimiento.id_reporte}" name="monto" value="${movimiento.monto}" required />
+                    </div>
+                    <div class="mb-2">
+                        <label for="fechaEditar-${movimiento.id_reporte}" class="">Fecha:</label>
+                        <input type="date" id="fechaEditar-${movimiento.id_reporte}" name="fecha" class="form-control" value="${movimiento.fecha}" required />
+                    </div>
+                    <div class="mb-2">
+                        <label for="conceptoEditar-${movimiento.id_reporte}" class="form-label">Concepto</label>
+                        <textarea class="form-control" id="conceptoEditar-${movimiento.id_reporte}" name="concepto" required>${movimiento.concepto}</textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label for="fk_categoria" class="form-label">Categoría</label>
+                        <select class="form-select" id="fk_categoria" name="fk_categoria">
+                            <option value="">Seleccione...</option>
+                            <c:forEach var="categoria" items="${categorias}">
+                                <option value="${categoria.id_categoria}" ${movimiento.fk_categoria.id_categoria == categoria.id_categoria ? 'selected' : ''}>
+                                        ${categoria.nombre}
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación de eliminación para cada movimiento -->
+<c:forEach var="movimiento" items="${movimientos}">
+    <div class="modal fade" id="modalEliminar-${movimiento.id_reporte}" tabindex="-1" aria-labelledby="modalEliminarLabel-${movimiento.id_reporte}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEliminarLabel-${movimiento.id_reporte}">Confirmación de Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas eliminar este movimiento?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="/SPC/EliminarMovimiento" method="post">
+                        <input type="hidden" name="id_movimiento" value="${movimiento.id_reporte}" />
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</c:forEach>
+
+<!-- Modal -->
+<div class="modal fade" id="Modal" tabindex="-1" aria-labelledby="ModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/AñadirM" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ModalLabel">Registro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label for="monto" class="form-label">Monto</label>
+                        <input type="number" class="form-control" id="monto" name="monto" required/>
+                    </div>
+                    <div class="mb-2">
+                        <label for="fecha" class="">Fecha Registro:</label>
+                        <input type="date" name="fecha" id="fecha" class="form-control" required/>
+                    </div>
+                    <div class="mb-2">
+                        <label for="concepto" class="form-label">Concepto</label>
+                        <textarea type="text" class="form-control" id="concepto" name="concepto" required> </textarea>
+                    </div>
+                    <div class="mb-2">
+                        <div class="mb-2">
+                            <label for="cuenta" class="form-label">Cuenta</label>
+                            <select class="form-select" id="cuenta" name="cuenta">
+                                <option value="">Seleccione...</option>
+                                <c:forEach var="tarjeta" items="${tarjetasBanco}">
+                                    <option value="${tarjeta}">${tarjeta}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="categoria" class="form-label">Categoría</label>
+                        <select class="form-select" id="categoria" name="categoria">
+                            <option value="">Seleccione...</option>
+                            <c:forEach var="categoria" items="${categorias}">
+                                <option value="${categoria.id_categoria}">  ${categoria.nombre}
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<jsp:include page="../layouts/footer.jsp"/>
+
+<script>
+    // Configura el envío del formulario de edición cuando el modal se cierre
+    $('#ModalEditar-${movimiento.id_reporte}').on('hidden.bs.modal', function () {
+        $('#formularioEditar-${movimiento.id_reporte}').submit();
+    });
+</script>
+</body>
+</html>
