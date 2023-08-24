@@ -1,0 +1,10 @@
+contraseña del admin de serv_MySQl y se Serv_Tomcat
+SPC140823
+
+contraseña del MySql
+Spc1408$
+
+Contraseña del hostmanager
+admin
+password
+
