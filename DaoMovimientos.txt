@@ -1,0 +1,114 @@
+public class DaoMovimientos implements DaoRepository<Movimientos> {
+    private Connection conn;
+    private PreparedStatement pstm;
+    private ResultSet rs;
+    HttpSession session;
+
+    @Override
+    public List<Movimientos> findAll() {
+        List<Movimientos> movimientos = null;
+        try {
+            movimientos = new ArrayList<>();
+            conn = new MySQLConnection().connect();
+            String query = "SELECT * from cuenta_usuario inner join reporte on cuenta_usuario.id_cuenta_usuario=reporte.fk_cuenta_usuario \n" +
+                    "inner join categoria on reporte.fk_categoria=categoria.id_categoria;";
+            pstm = conn.prepareStatement(query);
+            rs = pstm.executeQuery();
+            while (rs.next()){
+                Movimientos movimiento = new Movimientos();
+                movimiento.setMonto(rs.getDouble("monto"));
+                movimiento.setFecha(String.valueOf(rs.getDate("fecha")));
+                movimiento.setConcepto(rs.getString("concepto"));
+
+                Categoria categoria = new Categoria();
+                categoria.setId_categoria(rs.getLong("Id_categoria"));
+                categoria.setNombre(rs.getString("nombre"));
+                movimiento.setFk_categoria(categoria);
+                movimientos.add(movimiento);
+            }
+        }catch (SQLException e){
+            Logger.getLogger(DaoCategoria.class.getName())
+                    .log(Level.SEVERE, "Error" + e.getMessage());
+        }finally {
+            close();
+        }
+        return movimientos;
+    }
+
+    @Override
+    public Movimientos findOne(Long id) {
+        return null;
+    }
+
+    @Override
+    public boolean save(Movimientos movimiento){
+        try {
+            conn = new MySQLConnection().connect();
+            String query = "INSERT INTO reporte(id_reporte, monto, fecha, concepto, fk_cuenta_usuario, fk_categoria)" +
+                    "VALUES (?, ?, ?, ?, ?, ?);";
+            pstm = conn.prepareStatement(query);
+            pstm.setLong(1, movimiento.getId_reporte());
+            pstm.setDouble(2, movimiento.getMonto());
+            pstm.setDate(3, Date.valueOf(movimiento.getFecha()));
+            pstm.setString(4, movimiento.getConcepto());
+            pstm.setLong(5, movimiento.getFk_cuenta_usuario().getId_cuenta_usuario());
+            pstm.setLong(6, movimiento.getFk_categoria().getId_categoria());
+
+            int rowsAffected = pstm.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e){
+            Logger.getLogger(DaoCategoria.class.getName())
+                    .log(Level.SEVERE, "Error" + e.getMessage());
+        } finally {
+            close();
+        }
+        return false;
+    }
+
+
+    public boolean update(Movimientos movimiento) {
+        try {
+            String query = "UPDATE reporte SET monto = ?, fecha = ?, concepto = ?, fk_cuenta_usuario = ?, fk_categoria = ? WHERE id_reporte = ?";
+            PreparedStatement preparedStatement = conn.prepareStatement(query);
+            preparedStatement.setDouble(1, movimiento.getMonto());
+            preparedStatement.setDate(2, java.sql.Date.valueOf(movimiento.getFecha()));
+            preparedStatement.setString(3, movimiento.getConcepto());
+            preparedStatement.setLong(4, movimiento.getFk_cuenta_usuario().getId_cuenta_usuario());
+            preparedStatement.setLong(5, movimiento.getFk_categoria().getId_categoria());
+            preparedStatement.setLong(6, movimiento.getId_reporte());
+
+            int rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean delete(Long movimientoId) {
+        try {
+            String query = "DELETE FROM reporte WHERE id_reporte = ?";
+            PreparedStatement preparedStatement = conn.prepareStatement(query);
+            preparedStatement.setLong(1, movimientoId);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+public void close(){
+        try {
+            if (conn != null) conn.close();
+            if (pstm != null) pstm.close();
+            if (rs != null) rs.close();
+        }catch (SQLException e){
+            Logger.getLogger(DaoCategoria.class.getName())
+                    .log(Level.SEVERE, "Error closeConnection" + e.getMessage());
+        }
+    }
+}
